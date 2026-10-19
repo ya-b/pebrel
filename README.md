@@ -1,3 +1,5 @@
+> **Note:** This build disables automatic installation and updating of the Pebrel Runtime Skill in AI agent directories (Claude Code, Codex, etc.). `pebrel setup-ai --remove` still removes Pebrel-managed skills; the runtime control API is unaffected.
+
 <p align="center">
   <img src="extra/logo/nebula.png" alt="Pebrel Titanium icon" width="148" height="148" />
 </p>

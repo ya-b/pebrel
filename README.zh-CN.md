@@ -1,3 +1,5 @@
+> **说明：** 本构建已禁用向 AI Agent 技能目录（Claude Code、Codex 等）自动安装或更新 Pebrel Runtime Skill。`pebrel setup-ai --remove` 仍可移除由 Pebrel 安装的 Skill；Runtime 控制 API 不受影响。
+
 <p align="center">
   <img src="extra/logo/nebula.png" alt="Pebrel 钛银图标" width="148" height="148" />
 </p>

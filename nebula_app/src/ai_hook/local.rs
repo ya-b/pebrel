@@ -316,6 +316,7 @@ pub fn setup_ai_cli(remove: bool) -> i32 {
             }
         }
     } else {
+        /*
         for (agent, path, result) in ensure_runtime_skills() {
             match result {
                 Ok(ManagedSkillInstall::Installed) => {
@@ -335,6 +336,7 @@ pub fn setup_ai_cli(remove: bool) -> i32 {
                 },
             }
         }
+        */
         println!("默认接入 Claude Code 与 Codex；其他 Agent 由设置菜单控制。");
         println!("Codex 原生 Hook 可能需要在 /hooks 中审阅启用；notify 兼容路径仍保留。");
         println!("对新启动的会话生效；正在运行的会话保持原快照。");

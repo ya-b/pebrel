@@ -56,6 +56,7 @@ fn heal_all() {
     if raw.bool_on("ai_hooks") == Some(false) {
         return;
     }
+    /*
     for (agent, path, result) in ensure_runtime_skills() {
         match result {
             Ok(ManagedSkillInstall::Installed) => {
@@ -72,6 +73,7 @@ fn heal_all() {
             ),
         }
     }
+    */
 }
 
 fn config_guard(tx: mpsc::SyncSender<()>, rx: mpsc::Receiver<()>, stop: Arc<AtomicBool>) {
