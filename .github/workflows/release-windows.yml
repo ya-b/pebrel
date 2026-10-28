@@ -1,0 +1,86 @@
+name: Pebrel Windows x64 build
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: windows-build-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: "1"
+  RUST_TOOLCHAIN: "1.97.1"
+  PYTHONUTF8: "1"
+
+jobs:
+  prepare:
+    name: Resolve package version
+    runs-on: ubuntu-22.04
+    outputs:
+      version: ${{ steps.metadata.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Resolve package version
+        id: metadata
+        run: |
+          version="$(python3 scripts/preview_release.py --print-package-version nebula_app/Cargo.toml)"
+          echo "version=$version" >>"$GITHUB_OUTPUT"
+
+  windows:
+    name: Windows x64 stable package
+    needs: prepare
+    runs-on: windows-2022
+    timeout-minutes: 120
+    env:
+      PACKAGE_VERSION: ${{ needs.prepare.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: ${{ env.RUST_TOOLCHAIN }}
+      - uses: ./.github/actions/rust-cache
+        id: rust-cache
+        with:
+          key: release
+          target: target/release
+          legacy-key: windows
+      - name: Prepare pinned Windows console runtime
+        shell: pwsh
+        run: |
+          ./scripts/prepare-windows-runtime.ps1 -Destination assets/windows/conhost
+      - name: Build GPUI release binary
+        shell: pwsh
+        run: |
+          ./scripts/build-windows-product.ps1 -Configuration release -TargetDirectory target
+      - name: Save compiled workload
+        if: ${{ always() && steps.rust-cache.outcome == 'success' && steps.rust-cache.outputs.cache-hit != 'true' }}
+        uses: actions/cache/save@v4
+        with:
+          path: target/release
+          key: ${{ steps.rust-cache.outputs.cache-key }}
+      - name: Package ZIP and installer
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          ./scripts/package-release.ps1 -Version $env:PACKAGE_VERSION -PackageBrand Pebrel -OutputDirectory dist -TargetDirectory target -Force
+          ./scripts/build-installer.ps1 -Version $env:PACKAGE_VERSION -PackageBrand Pebrel -OutputDirectory dist -TargetDirectory target -Force
+      - name: Upload Windows stable assets
+        uses: actions/upload-artifact@v4
+        with:
+          compression-level: 0
+          name: stable-package-windows-x64
+          path: |
+            dist/Pebrel-v${{ needs.prepare.outputs.version }}-windows-x64.zip
+            dist/Pebrel-v${{ needs.prepare.outputs.version }}-windows-x64-setup.exe
+          if-no-files-found: error
+          retention-days: 14
